@@ -1,20 +1,22 @@
 const COLORS = [
-    "#FFFFFF",
-    "#FF0000",
-    "#FFFF00",
-    "#00FF00",
-    "#00FFFF",
-    "#FF00FF",
-    "#FF6347",
-    "#98FB98",
-    "#E0FFFF",
-    "#B0E0E6",
-    "#EE82EE",
-    "#FFC0CB",
-    "#F5F5DC",
-    "#FFF8DC",
-    "#FAF0E6",
-    "#FFFAFA"
+    "#a2cffe",
+    "#a6e7ff",
+    "#74bbfb",
+    "#efc5b5",
+    "#fbe8ce",
+    "#fdee73",
+    "#aaffaa",
+    "#aefd6c",
+    "#a5fbd5",
+    "#64bfa4",
+    "#c8fd3d",
+    "#ffa180",
+    "#efc0fe",
+    "#ffcfdc",
+    "#eeaaff",
+    "#bf77f6",
+    "#f6cefc",
+    "#feff7f"
 ]
 
 async function draw() {
@@ -62,7 +64,7 @@ async function draw() {
                 "id": i++,
                 "label": node1,
                 "color": {
-                    background :getColor(node1Owner),
+                    background: getColor(node1Owner),
                     color: getColor(node1Owner)
                 },
             })
@@ -74,7 +76,7 @@ async function draw() {
                 "id": i++,
                 "label": node2,
                 "color": {
-                    background :getColor(node2Owner),
+                    background: getColor(node2Owner),
                     color: getColor(node2Owner)
                 },
             })
@@ -108,13 +110,66 @@ async function draw() {
         edges: edgesView,
     }, {
         edges: {
-            length: 200
+            length: 300,
+        },
+        interaction: {
+            hideEdgesOnDrag: true,
         },
         physics: {
+            solver: "barnesHut",
             barnesHut: {
-                avoidOverlap: 0.05
+                gravitationalConstant: -10000,
+                avoidOverlap: 1,
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 20,
+            },
+        },
+        nodes: {
+            shape: "dot",
+            color: {
+                highlight: {
+                    background: "lightgreen",
+                },
+            },
+        },
+    });
+    network.on('doubleClick', (event) => {
+        console.log(event)
+        let nodeID = event.nodes[0]
+        let node = formattedData.nodes.find(_ => _.id == nodeID)
+        let selfNodeIDs = new Set();
+        let usedNodeIDs = new Set();
+        let owner = node.label.split('-')[0]
+        if (node) {
+            for (let node of formattedData.nodes) {
+                if (node.label.startsWith(owner)) {
+                    selfNodeIDs.add(node.id)
+                }
+            }
+            for (let edge of formattedData.links) {
+                let aNodeID = edge.from;
+                let aNode = formattedData.nodes.find(_ => _.id == aNodeID);
+                let bNodeID = edge.to;
+                let bNode = formattedData.nodes.find(_ => _.id == bNodeID);
+                if (!selfNodeIDs.has(aNodeID) && !selfNodeIDs.has(bNodeID)) {
+                    edges.remove({
+                        id: edge.id
+                    })
+                } else {
+                    usedNodeIDs.add(aNodeID)
+                    usedNodeIDs.add(bNodeID)
+                }
+            }
+            for (let node of formattedData.nodes) {
+                if (!usedNodeIDs.has(node.id)) {
+                    nodes.remove({
+                        id: node.id
+                    })
+                }
             }
         }
-    });
+    })
 }
 draw()
